@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  accounts         Account[]
+  transactions     Transaction[]
+  refreshTokens    RefreshToken[]
+  categories       Category[]
+  idempotencyKeys  IdempotencyKey[]
+  monthlySummaries MonthlyUserSummary[]
+  budgets          Budget[]
+  notificationPreferences NotificationPreference[]
+}
+
+model Account {
+  id        String      @id @default(uuid())
+  userId    String
+  name      String
+  type      AccountType
+  createdAt DateTime    @default(now())
+  deletedAt DateTime?
+
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@unique([userId, name])
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  userId      String
+  accountId   String
+  amount      Decimal         @db.Decimal(12, 2)
+  type        TransactionType
+  categoryId  String?
+  createdAt   DateTime        @default(now())
+  deletedAt   DateTime?
+  description String?
+  transferId  String?
+
+  user     User      @relation(fields: [userId], references: [id])
+  account  Account   @relation(fields: [accountId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  // User-scoped unified feed (ORDER BY createdAt DESC, id DESC)
+  @@index([userId, deletedAt, createdAt(sort: Desc), id(sort: Desc)])
+  // Account-scoped feed (ORDER BY createdAt DESC, id DESC)
+  @@index([accountId, deletedAt, createdAt(sort: Desc), id(sort: Desc)])
+  // Transfer grouping
+  @@index([transferId, deletedAt])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user         User?         @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@unique([userId, name])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, expiresAt])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum AccountType {
+  SAVINGS
+  CREDIT
+  CASH
+}
+
+model IdempotencyKey {
+  id           String            @id @default(uuid())
+  userId       String
+  key          String
+  requestHash  String
+  responseBody Json?
+  status       IdempotencyStatus
+  createdAt    DateTime          @default(now())
+  completedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, key])
+  @@index([userId, createdAt])
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model MonthlyUserSummary {
+  userId    String // FK to User
+  month     String // YYYY-MM format
+  income    Decimal  @db.Decimal(20, 4)
+  expense   Decimal  @db.Decimal(20, 4)
+  net       Decimal  @db.Decimal(20, 4)
+  generatedAt DateTime @default(now())
+
+  // Relation to User
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId, month]) // Composite primary key
+  @@map("monthly_user_summary")
+}
+
+model Budget {
+  id         String   @id @default(uuid())
+  userId     String
+  categoryId String
+  month      String // YYYY-MM
+  amount     Decimal  @db.Decimal(20, 4)
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId, month])
+}
+
+model NotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String
+  type      NotificationType
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type])
+}
+
+enum NotificationType {
+  BUDGET_EXCEEDED
+  MONTHLY_SUMMARY_READY
+}
+
+model AuditLog {
+  id              String   @id @default(uuid())
+  event           String // What happened
+  userId          String? // Who caused it (nullable for system events)
+
+  entityType      String // What domain entity this relates to
+  entityId        String?
+
+  requestId       String? // Request correlation
+  idempotencyKey  String?
+
+  metadata        Json? // Extra context (descriptive only)
+
+  createdAt       DateTime @default(now())
+
+  // Indexes for common queries
+  @@index([userId])
+  @@index([event])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  //no foreign keys intentionally
+}

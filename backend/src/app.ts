@@ -1,0 +1,49 @@
+import express from "express";
+import { prisma } from "./config/prisma";
+import authRoutes from "./routes/auth.route";
+import accountRoutes from "./routes/account.route";
+import transactionRoutes from "./routes/transaction.route";
+import transferRoutes from "./routes/transfer.route";
+import feedRoutes from "./routes/feed.route";
+import reportingRoutes from "./routes/reporting.route";
+import budgetRoutes from "./routes/budget.route";
+import { authRateLimit } from "./middlewares/rateLimit.middleware";
+import { errorHandler } from "./middlewares/error.middleware";
+
+const app = express();
+
+app.use(express.json());
+
+// routes
+app.use("/auth", authRoutes);
+app.use("/accounts", authRateLimit, accountRoutes);
+app.use("/transactions", authRateLimit, transactionRoutes);
+app.use("/transfers", authRateLimit, transferRoutes);
+app.use("/feed", authRateLimit, feedRoutes);
+app.use("/reports", authRateLimit, reportingRoutes);
+app.use("/budgets", budgetRoutes);
+
+
+// health check
+app.get("/health", async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: "ok", database: "connected" });
+  } catch {
+    res.status(500).json({ status: "error", database: "disconnected" });
+  }
+});
+
+// internal API
+// 🧪 How Ops Use It: curl \
+//   -H "X-Internal-Token: super-secret-token" \
+//   https://api.yourapp.com/internal/audit-logs
+import auditLogsRoutes from "./routes/auditLogs.route";
+app.use("/internal", auditLogsRoutes);
+
+
+
+// global error handler (must be last)
+app.use(errorHandler);
+
+export default app;
