@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import { prisma } from "./config/prisma";
 import authRoutes from "./routes/auth.route";
 import accountRoutes from "./routes/account.route";
@@ -7,12 +8,14 @@ import transferRoutes from "./routes/transfer.route";
 import feedRoutes from "./routes/feed.route";
 import reportingRoutes from "./routes/reporting.route";
 import budgetRoutes from "./routes/budget.route";
+import recurringRoutes from "./routes/recurringTransaction.route";
 import { authRateLimit } from "./middlewares/rateLimit.middleware";
 import { errorHandler } from "./middlewares/error.middleware";
 
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 // routes
 app.use("/auth", authRoutes);
@@ -22,6 +25,8 @@ app.use("/transfers", authRateLimit, transferRoutes);
 app.use("/feed", authRateLimit, feedRoutes);
 app.use("/reports", authRateLimit, reportingRoutes);
 app.use("/budgets", budgetRoutes);
+app.use("/recurring-transactions", recurringRoutes);
+
 
 
 // health check

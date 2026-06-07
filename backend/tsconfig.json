@@ -2,13 +2,13 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "moduleResolution": "node", // Add this: Helps IDE find Zod methods
+    "types": ["node"],
     "declaration": true,
     "typeRoots": [
       "./node_modules/@types",
@@ -16,6 +16,8 @@
     ]
   },
   "include": [
-    "src/**/*"
-, "src/jobs"  ]
+    "src/**/*",
+    "src/jobs",
+    "scripts/**/*.ts"
+  ]
 }

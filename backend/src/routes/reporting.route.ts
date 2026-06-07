@@ -15,7 +15,7 @@ const router = Router();
 router.get(
   "/monthly-summary",
   authenticate,
-  validate(monthlySummaryQuerySchema),
+  validate(monthlySummaryQuerySchema, "query"),
   getMonthlySummaryController
 );
 
@@ -23,7 +23,7 @@ router.get(
 router.get(
   "/category-breakdown",
   authenticate,
-  validate(categoryBreakdownQuerySchema),
+  validate(categoryBreakdownQuerySchema, "query"),
   getCategoryBreakdownController
 );
 

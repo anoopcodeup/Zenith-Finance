@@ -4,6 +4,7 @@ import { validate } from "../middlewares/validate.middleware";
 import { loginSchema, registerSchema } from "../validators/auth.schema";
 import { authenticate } from "../middlewares/auth.middleware";
 import { publicRateLimit, authRateLimit } from "../middlewares/rateLimit.middleware";
+import { validateCsrf } from "../middlewares/csrf.middleware";
 
 
 const router = Router();
@@ -11,7 +12,7 @@ const router = Router();
 router.post("/register", publicRateLimit, validate(registerSchema), registerUser);
 router.post("/login", publicRateLimit, validate(loginSchema), loginUser);
 router.get("/me", authenticate, authRateLimit, getMe);
-router.post("/logout", authRateLimit, logoutUser);
-router.post("/refresh", authRateLimit, refreshToken);
+router.post("/logout", authRateLimit, validateCsrf, logoutUser);
+router.post("/refresh", authRateLimit, validateCsrf, refreshToken);
 
 export default router;

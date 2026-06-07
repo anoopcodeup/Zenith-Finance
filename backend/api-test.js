@@ -2,7 +2,8 @@ const axios = require('axios');
 
 const BASE_URL = 'http://localhost:3000';
 let authToken = '';
-let refreshToken = '';
+let refreshTokenCookie = '';
+let csrfToken = '';
 let accountId = '';
 let transactionId = '';
 let transferId = '';
@@ -11,6 +12,20 @@ const log = (msg, color = '\x1b[0m') => console.log(`${color}${msg}\x1b[0m`);
 const green = '\x1b[32m';
 const red = '\x1b[31m';
 const cyan = '\x1b[36m';
+
+/**
+ * Parse a specific cookie value from the Set-Cookie response headers array.
+ */
+function getCookieValue(cookieHeaders, name) {
+    if (!cookieHeaders) return '';
+    for (const cookie of cookieHeaders) {
+        const parts = cookie.split(';')[0].split('=');
+        if (parts[0].trim() === name) {
+            return parts.slice(1).join('=');
+        }
+    }
+    return '';
+}
 
 async function runTests() {
     log('\n=== COMPREHENSIVE ENDPOINT VERIFICATION ===\n', cyan);
@@ -24,7 +39,9 @@ async function runTests() {
             name: 'Final Test User'
         });
         authToken = regRes.data.accessToken || regRes.data.token;
-        refreshToken = regRes.data.refreshToken;
+        const regCookies = regRes.headers['set-cookie'] || [];
+        refreshTokenCookie = getCookieValue(regCookies, 'refreshToken');
+        csrfToken = getCookieValue(regCookies, 'csrfToken');
         log('✓ Register success', green);
 
         // 2. Auth: Me
@@ -74,7 +91,7 @@ async function runTests() {
         );
         log(`✓ Create Second Transaction success`, green);
 
-        // 7. Transactions: List (History) - THIS WAS FAILING BEFORE
+        // 7. Transactions: List (History)
         log('\nTesting Transactions: List History (Query Params)...');
         const txListRes = await axios.get(`${BASE_URL}/transactions/accounts/${accountId}/history?limit=10`, {
             headers: { Authorization: `Bearer ${authToken}` }
@@ -122,7 +139,7 @@ async function runTests() {
 
         // 12.1 Category Filter
         log('  Testing Category Filter...');
-        const catFeedRes = await axios.get(`${BASE_URL}/feed?kind=TRANSACTION&categoryId=${validCategoryId}`, {
+        await axios.get(`${BASE_URL}/feed?kind=TRANSACTION&categoryId=${validCategoryId}`, {
             headers: { Authorization: `Bearer ${authToken}` }
         });
         log('  ✓ Category filter successful', green);
@@ -139,7 +156,6 @@ async function runTests() {
 
         // 13. Feed: Cursor continuation
         log('\nTesting Feed: Cursor Continuation...');
-
         const page1 = await axios.get(
             `${BASE_URL}/feed?limit=2`,
             { headers: { Authorization: `Bearer ${authToken}` } }
@@ -154,27 +170,16 @@ async function runTests() {
             { headers: { Authorization: `Bearer ${authToken}` } }
         );
 
-        // Combine
-        const allItems = [
-            ...page1.data.items,
-            ...page2.data.items,
-        ];
-
-        // Assert no duplicates
-        const ids = allItems.map((i) =>
-            i.kind === "TRANSACTION" ? i.id : i.transferId
-        );
-
+        const allItems = [...page1.data.items, ...page2.data.items];
+        const ids = allItems.map((i) => i.kind === "TRANSACTION" ? i.id : i.transferId);
         const uniqueIds = new Set(ids);
         if (ids.length !== uniqueIds.size) {
             throw new Error("Duplicate items detected across pages");
         }
 
-        // Assert ordering
         for (let i = 1; i < allItems.length; i++) {
             const prev = allItems[i - 1];
             const curr = allItems[i];
-
             if (new Date(prev.createdAt) < new Date(curr.createdAt)) {
                 throw new Error("Feed order violated");
             }
@@ -182,10 +187,18 @@ async function runTests() {
 
         log('✓ Feed cursor pagination verified (no duplicates, stable order)', green);
 
-        // 14. Auth: Refresh
+        // 14. Auth: Refresh (using HttpOnly cookie + CSRF token)
         log('\nTesting Auth: Refresh Token...');
-        log(`  Using Refresh Token: ${refreshToken ? (refreshToken.substring(0, 10) + '...') : 'MISSING'}`);
-        const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
+        log(`  Using CSRF Token: ${csrfToken ? (csrfToken.substring(0, 10) + '...') : 'MISSING'}`);
+        const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, {}, {
+            headers: {
+                Cookie: `refreshToken=${refreshTokenCookie}; csrfToken=${csrfToken}`,
+                'X-CSRF-Token': csrfToken,
+            }
+        });
+        const refreshCookies = refreshRes.headers['set-cookie'] || [];
+        refreshTokenCookie = getCookieValue(refreshCookies, 'refreshToken') || refreshTokenCookie;
+        csrfToken = getCookieValue(refreshCookies, 'csrfToken') || csrfToken;
         log('✓ Refresh Token success', green);
 
         // 15. Transactions: Delete
@@ -202,10 +215,14 @@ async function runTests() {
         });
         log('✓ Delete Account success', green);
 
-        // 17. Auth: Logout
+        // 17. Auth: Logout (using HttpOnly cookie + CSRF token)
         log('\nTesting Auth: Logout...');
-        await axios.post(`${BASE_URL}/auth/logout`, { refreshToken }, {
-            headers: { Authorization: `Bearer ${authToken}` }
+        await axios.post(`${BASE_URL}/auth/logout`, {}, {
+            headers: {
+                Authorization: `Bearer ${authToken}`,
+                Cookie: `refreshToken=${refreshTokenCookie}; csrfToken=${csrfToken}`,
+                'X-CSRF-Token': csrfToken,
+            }
         });
         log('✓ Logout success', green);
 

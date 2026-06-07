@@ -95,7 +95,7 @@ export const lockAccountsForTransfer = async (
     SELECT id
     FROM "Account"
     WHERE id = ANY($1)
-      AND userId = $2
+      AND "userId" = $2
       AND "deletedAt" IS NULL
     FOR UPDATE
     `,

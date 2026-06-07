@@ -8,32 +8,32 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String
-  createdAt    DateTime  @default(now())
-  deletedAt    DateTime?
-
-  accounts         Account[]
-  transactions     Transaction[]
-  refreshTokens    RefreshToken[]
-  categories       Category[]
-  idempotencyKeys  IdempotencyKey[]
-  monthlySummaries MonthlyUserSummary[]
-  budgets          Budget[]
+  id                      String                   @id @default(uuid())
+  email                   String                   @unique
+  passwordHash            String
+  createdAt               DateTime                 @default(now())
+  deletedAt               DateTime?
+  accounts                Account[]
+  budgets                 Budget[]
+  categories              Category[]
+  idempotencyKeys         IdempotencyKey[]
   notificationPreferences NotificationPreference[]
+  recurringTransactions   RecurringTransaction[]
+  refreshTokens           RefreshToken[]
+  transactions            Transaction[]
+  monthlySummaries        MonthlyUserSummary[]
 }
 
 model Account {
-  id        String      @id @default(uuid())
-  userId    String
-  name      String
-  type      AccountType
-  createdAt DateTime    @default(now())
-  deletedAt DateTime?
-
-  user         User          @relation(fields: [userId], references: [id])
-  transactions Transaction[]
+  id                    String                 @id @default(uuid())
+  userId                String
+  name                  String
+  type                  AccountType
+  createdAt             DateTime               @default(now())
+  deletedAt             DateTime?
+  user                  User                   @relation(fields: [userId], references: [id])
+  recurringTransactions RecurringTransaction[]
+  transactions          Transaction[]
 
   @@unique([userId, name])
 }
@@ -49,28 +49,24 @@ model Transaction {
   deletedAt   DateTime?
   description String?
   transferId  String?
+  account     Account         @relation(fields: [accountId], references: [id])
+  category    Category?       @relation(fields: [categoryId], references: [id])
+  user        User            @relation(fields: [userId], references: [id])
 
-  user     User      @relation(fields: [userId], references: [id])
-  account  Account   @relation(fields: [accountId], references: [id])
-  category Category? @relation(fields: [categoryId], references: [id])
-
-  // User-scoped unified feed (ORDER BY createdAt DESC, id DESC)
   @@index([userId, deletedAt, createdAt(sort: Desc), id(sort: Desc)])
-  // Account-scoped feed (ORDER BY createdAt DESC, id DESC)
   @@index([accountId, deletedAt, createdAt(sort: Desc), id(sort: Desc)])
-  // Transfer grouping
   @@index([transferId, deletedAt])
 }
 
 model Category {
-  id        String   @id @default(uuid())
-  name      String
-  userId    String?
-  createdAt DateTime @default(now())
-
-  user         User?         @relation(fields: [userId], references: [id])
-  transactions Transaction[]
-  budgets      Budget[]
+  id                    String                 @id @default(uuid())
+  name                  String
+  userId                String?
+  createdAt             DateTime               @default(now())
+  budgets               Budget[]
+  user                  User?                  @relation(fields: [userId], references: [id])
+  recurringTransactions RecurringTransaction[]
+  transactions          Transaction[]
 
   @@unique([userId, name])
 }
@@ -81,10 +77,102 @@ model RefreshToken {
   tokenHash String
   expiresAt DateTime
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId, expiresAt])
+}
+
+model IdempotencyKey {
+  id           String            @id @default(uuid())
+  userId       String
+  key          String
+  requestHash  String
+  responseBody Json?
+  status       IdempotencyStatus
+  createdAt    DateTime          @default(now())
+  completedAt  DateTime?
+  user         User              @relation(fields: [userId], references: [id])
+
+  @@unique([userId, key])
+  @@index([userId, createdAt])
+}
+
+model MonthlyUserSummary {
+  userId      String
+  month       String
+  income      Decimal  @db.Decimal(20, 4)
+  expense     Decimal  @db.Decimal(20, 4)
+  net         Decimal  @db.Decimal(20, 4)
+  generatedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@id([userId, month])
+  @@map("monthly_user_summary")
+}
+
+model Budget {
+  id         String   @id @default(uuid())
+  userId     String
+  categoryId String
+  month      String
+  amount     Decimal  @db.Decimal(20, 4)
+  createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, categoryId, month])
+}
+
+model NotificationPreference {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  enabled   Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type])
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  event          String
+  userId         String?
+  entityType     String
+  entityId       String?
+  requestId      String?
+  idempotencyKey String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([event])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model RecurringTransaction {
+  id          String             @id @default(uuid())
+  userId      String
+  accountId   String
+  amount      Decimal            @db.Decimal(12, 2)
+  type        TransactionType
+  categoryId  String?
+  description String?
+  frequency   RecurringFrequency
+  startDate   DateTime
+  endDate     DateTime?
+  nextRunAt   DateTime
+  lastRunAt   DateTime?
+  active      Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  account     Account            @relation(fields: [accountId], references: [id])
+  category    Category?          @relation(fields: [categoryId], references: [id])
+  user        User               @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([nextRunAt, active])
 }
 
 enum TransactionType {
@@ -98,66 +186,9 @@ enum AccountType {
   CASH
 }
 
-model IdempotencyKey {
-  id           String            @id @default(uuid())
-  userId       String
-  key          String
-  requestHash  String
-  responseBody Json?
-  status       IdempotencyStatus
-  createdAt    DateTime          @default(now())
-  completedAt  DateTime?
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([userId, key])
-  @@index([userId, createdAt])
-}
-
 enum IdempotencyStatus {
   IN_PROGRESS
   COMPLETED
-}
-
-model MonthlyUserSummary {
-  userId    String // FK to User
-  month     String // YYYY-MM format
-  income    Decimal  @db.Decimal(20, 4)
-  expense   Decimal  @db.Decimal(20, 4)
-  net       Decimal  @db.Decimal(20, 4)
-  generatedAt DateTime @default(now())
-
-  // Relation to User
-  user User @relation(fields: [userId], references: [id])
-
-  @@id([userId, month]) // Composite primary key
-  @@map("monthly_user_summary")
-}
-
-model Budget {
-  id         String   @id @default(uuid())
-  userId     String
-  categoryId String
-  month      String // YYYY-MM
-  amount     Decimal  @db.Decimal(20, 4)
-  createdAt  DateTime @default(now())
-
-  user     User     @relation(fields: [userId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
-
-  @@unique([userId, categoryId, month])
-}
-
-model NotificationPreference {
-  id        String   @id @default(uuid())
-  userId    String
-  type      NotificationType
-  enabled   Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([userId, type])
 }
 
 enum NotificationType {
@@ -165,25 +196,9 @@ enum NotificationType {
   MONTHLY_SUMMARY_READY
 }
 
-model AuditLog {
-  id              String   @id @default(uuid())
-  event           String // What happened
-  userId          String? // Who caused it (nullable for system events)
-
-  entityType      String // What domain entity this relates to
-  entityId        String?
-
-  requestId       String? // Request correlation
-  idempotencyKey  String?
-
-  metadata        Json? // Extra context (descriptive only)
-
-  createdAt       DateTime @default(now())
-
-  // Indexes for common queries
-  @@index([userId])
-  @@index([event])
-  @@index([entityType, entityId])
-  @@index([createdAt])
-  //no foreign keys intentionally
+enum RecurringFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
 }

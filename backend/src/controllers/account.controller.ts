@@ -48,5 +48,5 @@ export const deleteAccount = async (req: Request, res: Response) => {
 
   await deleteUserAccount(userId, accountId);
 
-  return res.status(204).send();
+  return res.status(200).json({ message: "Account deleted successfully" }).send();
 };

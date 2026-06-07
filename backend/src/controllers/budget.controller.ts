@@ -31,7 +31,7 @@ export const getBudgets = async (req: Request, res: Response) => {
 
 export const getBudgetById = async (req: Request, res: Response) => {
   const userId = (req as any).user.id;
-  const budgetId = req.params.budgetId;
+  const budgetId = req.params.budgetId as string;
 
   const budget = await getBudgetByIdService(userId, budgetId);
 
@@ -42,7 +42,7 @@ export const getBudgetById = async (req: Request, res: Response) => {
 
 export const deleteBudget = async (req: Request, res: Response) => {
   const userId = (req as any).user.id;
-  const budgetId = req.params.budgetId;
+  const budgetId = req.params.budgetId as string;
 
   await deleteBudgetService(userId, budgetId);
 

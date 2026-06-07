@@ -4,6 +4,9 @@ backend/node_modules/
 # Production builds
 backend/dist/
 
+# Prisma Generated Client
+backend/src/generated/prisma/
+
 # Environment configurations (Secrets)
 backend/.env
 
@@ -19,3 +22,10 @@ backend/storage/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Scripts compiled outputs
+backend/scripts/*.js
+backend/scripts/*.d.ts
+
+# Documentation / Notes
+POSTMAN_VERIFICATION_PLAN.md
