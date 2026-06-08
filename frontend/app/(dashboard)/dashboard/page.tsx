@@ -190,13 +190,13 @@ export default function DashboardPage() {
             )}
 
             {recentFeed.map((item, i) => {
-              const isTransfer = item.type === "TRANSFER";
+              const isTransfer = item.kind === "TRANSFER" || item.type === "TRANSFER";
               const isIncome = !isTransfer && item.type === "INCOME";
               const isExpense = !isTransfer && item.type === "EXPENSE";
 
               return (
                 <div
-                  key={item.id}
+                  key={item.id ?? item.transferId}
 
                   className={cn(
                     "flex items-center gap-3 px-4 py-3.5 transition-opacity duration-300",

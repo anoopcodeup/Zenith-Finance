@@ -65,13 +65,13 @@ export default function TransactionsPage() {
         )}
 
         {allItems.map((item, i) => {
-          const isTransfer = item.type === "TRANSFER";
+          const isTransfer = item.kind === "TRANSFER" || item.type === "TRANSFER";
           const isIncome = !isTransfer && item.type === "INCOME";
           const isExpense = !isTransfer && item.type === "EXPENSE";
 
           return (
             <motion.div
-              key={item.id}
+              key={item.id ?? item.transferId}
 
               initial={{ opacity: 0 }}
               animate={{ opacity: item.deletedAt ? 0.45 : 1 }}

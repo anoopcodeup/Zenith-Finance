@@ -15,58 +15,74 @@ Zenith2 is a high-performance, double-entry ledger and personal finance tracking
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Directory Structure
 
-*   **Runtime:** Node.js (v18+)
+This repository is organized as a monorepo containing both the backend service and the frontend web application:
+
+```text
+Zenith-Finance/
+├── backend/            # Express REST API (Node/TypeScript)
+├── frontend/           # Next.js App Router (React/TypeScript)
+└── docs/               # Detailed system architecture documentation
+```
+
+### Backend Tech Stack
+*   **Runtime:** Node.js (v24+)
 *   **Language:** TypeScript
 *   **Web Framework:** Express.js (v5)
 *   **Database ORM:** Prisma with PostgreSQL
 *   **Cache & Queue:** Redis (`ioredis` + `bullmq`)
 *   **Data Validation:** Zod
 
+### Frontend Tech Stack
+*   **Framework:** Next.js (v16 App Router)
+*   **Styling & UI:** TailwindCSS, Framer Motion (for premium micro-animations)
+*   **State Management:** Zustand (global UI/auth state)
+*   **Data Fetching & Cache:** TanStack React Query (server-state syncing)
+*   **Icons:** Lucide React
+
 ---
 
 ## ⚙️ Environment Configuration
 
-Create a `.env` file in the `backend` directory based on the following template:
-
+### Backend Configuration
+Create a `.env` file in the `backend/` directory:
 ```env
 DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<db_name>?schema=public"
 PORT=3000
-
-# Redis connection URL for caching and queues
 REDIS_URL="redis://<user>:<password>@<host>:<port>"
-
-# JWT secret keys
 JWT_ACCESS_SECRET="your-access-secret"
 JWT_REFRESH_SECRET="your-refresh-secret"
-
-# Internal Token for accessing Audit Logs
 INTERNAL_API_TOKEN="your-internal-api-secret"
+```
+
+### Frontend Configuration
+Create a `.env.local` file in the `frontend/` directory:
+```env
+NEXT_PUBLIC_API_URL="http://localhost:3000"
 ```
 
 ---
 
 ## 📦 Getting Started
 
-### 1. Install Dependencies
+### 1. Set Up and Run the Backend
 ```bash
 cd backend
 npm install
-```
-
-### 2. Database Migration & Seed
-Apply database migrations and seed default global categories:
-```bash
 npx prisma migrate dev
 npx prisma db seed
-```
-
-### 3. Run the Development Server
-```bash
 npm run dev
 ```
-The server will start on `http://localhost:3000`.
+The server starts on `http://localhost:3000`.
+
+### 2. Set Up and Run the Frontend
+```bash
+cd ../frontend
+npm install
+npm run dev
+```
+The client starts on `http://localhost:3001` (or next available port).
 
 ---
 
@@ -74,14 +90,16 @@ The server will start on `http://localhost:3000`.
 
 All requests must include `Content-Type: application/json`. Protected endpoints require a Bearer token: `Authorization: Bearer <your_jwt_access_token>`.
 
-### Authentication
+### Authentication & Rate Limiting
+Public endpoints enforce a limit of **10 requests/min**, while authenticated routes allow **60 requests/min**, managed atomically via Redis Lua scripting.
+
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `POST` | `/auth/register` | Register a new user | No |
-| `POST` | `/auth/login` | Login user, revokes older tokens, returns JWT pair | No |
-| `POST` | `/auth/refresh` | Refresh access token using rotation | No |
-| `POST` | `/auth/logout` | Revoke active refresh token | Yes |
-| `GET` | `/auth/me` | Fetch active user information | Yes |
+| `POST` | `/auth/register` | Register a new user | No (Rate Limit: 10/min) |
+| `POST` | `/auth/login` | Login user, revokes older tokens, returns JWT pair | No (Rate Limit: 10/min) |
+| `POST` | `/auth/refresh` | Refresh access token using rotation | No (Rate Limit: 60/min) |
+| `POST` | `/auth/logout` | Revoke active refresh token | Yes (Rate Limit: 60/min) |
+| `GET` | `/auth/me` | Fetch active user information | Yes (Rate Limit: 60/min) |
 
 ### Accounts
 | Method | Endpoint | Description | Auth Required |
@@ -98,6 +116,7 @@ All requests must include `Content-Type: application/json`. Protected endpoints 
 | `GET` | `/transactions/accounts/:accountId/history` | List transactions (cursor-paginated) | Yes |
 | `GET` | `/transactions/accounts/:accountId/balance` | Get wallet balance (`income - expense`) | Yes |
 | `DELETE` | `/transactions/:transactionId` | Soft-delete transaction | Yes |
+| `POST` | `/transactions/:transactionId/restore` | Restore a soft-deleted transaction | Yes |
 
 ### Transfers
 | Method | Endpoint | Description | Auth Required |
@@ -108,9 +127,9 @@ All requests must include `Content-Type: application/json`. Protected endpoints 
 ### Unified Feed
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `GET` | `/feed` | Unified activity timeline with pagination and filters | Yes |
+| `GET` | `/feed` | Unified activity timeline with pagination and account filters | Yes |
 
-### Budgets (New)
+### Budgets
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
 | `POST` | `/budgets` | Upsert monthly budget for a category (`YYYY-MM`) | Yes |
@@ -128,6 +147,17 @@ All requests must include `Content-Type: application/json`. Protected endpoints 
 | Method | Endpoint | Description | Headers Required |
 |---|---|---|---|
 | `GET` | `/internal/audit-logs` | Fetch system audit logs | `X-Internal-Token` |
+
+---
+
+## 📘 System Design
+
+For details on core design patterns, models, and workflows, check the documentation files:
+
+*   **[Backend Architecture & Transport](file:///c:/Users/ANOOP%20SINGH/OneDrive/Desktop/Zenith2/docs/system_info/backend.md)**: Routing patterns, middleware stack (auth, validation, and Lua rate limiter), and cursor-based pagination.
+*   **[Frontend Application Layout](file:///c:/Users/ANOOP%20SINGH/OneDrive/Desktop/Zenith2/docs/system_info/frontend.md)**: Client structure, Zustand store definitions, custom hook wrappers, and responsive modals.
+*   **[Redis & BullMQ Background Queues](file:///c:/Users/ANOOP%20SINGH/OneDrive/Desktop/Zenith2/docs/system_info/redis_workers.md)**: Redis caching strategies, request idempotency keys, sliding window rate limits, cron tasks, and queue workers.
+*   **[Database Schema & Models](file:///c:/Users/ANOOP%20SINGH/OneDrive/Desktop/Zenith2/docs/system_info/data_modeling.md)**: Prisma database schemas, tables relations (transactions, users, summaries, logs), and indexes.
 
 ---
 
@@ -151,3 +181,4 @@ The codebase includes several integration test scripts:
     ```bash
     npx ts-node scripts/test-budget-direct.ts
     ```
+

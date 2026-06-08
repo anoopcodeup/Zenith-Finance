@@ -70,17 +70,24 @@ export interface Transfer {
 export type FeedItemType = "INCOME" | "EXPENSE" | "TRANSFER";
 
 export interface FeedItem {
-  id: string;
-  type: FeedItemType;
+  kind: "TRANSACTION" | "TRANSFER";
+  id?: string;
+  transferId?: string;
+  type?: "INCOME" | "EXPENSE" | "TRANSFER";
   amount: string;
-  accountId: string;
+  accountId?: string;
   accountName?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  fromAccountName?: string;
+  toAccountName?: string;
   categoryId?: string | null;
   categoryName?: string | null;
   description?: string | null;
   createdAt: string;
   deletedAt?: string | null;
 }
+
 
 export interface PaginatedFeed {
   data: FeedItem[];
