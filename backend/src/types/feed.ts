@@ -8,6 +8,7 @@ export type FeedItem =
       categoryId?: string;
       description?: string;
       createdAt: Date;
+      deletedAt?: Date;
     }
   | {
       kind: "TRANSFER";
@@ -17,4 +18,5 @@ export type FeedItem =
       amount: number;
       description?: string;
       createdAt: Date;
+      deletedAt?: Date;
     };

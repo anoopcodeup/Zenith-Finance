@@ -7,6 +7,7 @@ import {
   createTransactionRepo,
   findTransactionById,
   softDeleteTransaction,
+  restoreTransactionRepo,
   aggregateAccountBalance,
   findAccountTransactionsCursor,
 } from "../repositories/transaction.repository";
@@ -188,6 +189,49 @@ export const deleteTransaction = async (
 };
 
 
+
+export const restoreTransaction = async (
+  userId: string,
+  transactionId: string
+) => {
+  return prisma.$transaction(async (tx) => {
+    // Find transaction without filtering on deletedAt so we can find the soft-deleted one
+    const transaction = await tx.transaction.findFirst({
+      where: {
+        id: transactionId,
+        userId,
+      },
+    });
+
+    if (!transaction) {
+      throw new HttpError("Transaction not found", 404);
+    }
+
+    if (transaction.deletedAt === null) {
+      throw new HttpError("Transaction is not deleted", 400);
+    }
+
+    await restoreTransactionRepo(tx, transactionId);
+
+    // 🔥 invalidate reporting cache
+    await invalidateReportingCache(userId, transaction.createdAt);
+
+    // 📝 Audit Log
+    await recordAuditLog(
+      tx,
+      {
+        userId,
+        event: AuditEvents.TRANSACTION_RESTORED,
+        entityType: EntityTypes.TRANSACTION,
+        entityId: transactionId,
+        metadata: {
+          accountId: transaction.accountId,
+          amount: transaction.amount.toString(),
+        },
+      }
+    );
+  });
+};
 
 export const getAccountBalance = async (
   userId: string,

@@ -19,6 +19,9 @@ export const upsertBudgetRepo = (
     },
     update: { amount: data.amount },
     create: data,
+    include: {
+      category: true,
+    },
   });
 
 export const getBudgetsForMonthRepo = (
@@ -30,6 +33,9 @@ export const getBudgetsForMonthRepo = (
     where: {
       userId,
       ...(month ? { month } : {}),
+    },
+    include: {
+      category: true,
     },
     orderBy: {
       month: "desc",
@@ -45,6 +51,9 @@ export const findBudgetByIdRepo = (
     where: {
       id: budgetId,
       userId,
+    },
+    include: {
+      category: true,
     },
   });
 

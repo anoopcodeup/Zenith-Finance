@@ -32,7 +32,6 @@ export async function listFeedRows(
   const { limit, cursor, from, to, kind, accountId, userId, categoryId, minAmount, maxAmount } = params;
 
   const where: Prisma.TransactionWhereInput = {
-    deletedAt: null,
     userId
   };
 

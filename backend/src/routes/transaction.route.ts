@@ -9,7 +9,9 @@ import {
 } from "../validators/transaction.schema";
 import {
   createTransactionHandler,
-  listAccountTransactionsHandler, deleteTransactionHandler,
+  listAccountTransactionsHandler,
+  deleteTransactionHandler,
+  restoreTransactionHandler,
   getAccountBalanceHandler
 } from "../controllers/transaction.controller";
 
@@ -35,6 +37,13 @@ router.delete(
   authenticate,
   validate(transactionIdParamSchema, "params"),
   deleteTransactionHandler
+);
+
+router.post(
+  "/:transactionId/restore",
+  authenticate,
+  validate(transactionIdParamSchema, "params"),
+  restoreTransactionHandler
 );
 
 router.get(

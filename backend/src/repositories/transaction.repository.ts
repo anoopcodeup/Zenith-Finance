@@ -23,6 +23,7 @@ export const createTransactionRepo = (
     description,
     categoryId,
     transferId,
+    createdAt,
   } = input;
 
   return prisma.transaction.create({
@@ -36,6 +37,7 @@ export const createTransactionRepo = (
       type,
       description,
       transferId,
+      createdAt,
     },
   });
 };
@@ -72,6 +74,16 @@ export const softDeleteTransaction = (
   return prisma.transaction.update({
     where: { id: transactionId },
     data: { deletedAt: new Date() },
+  });
+};
+
+export const restoreTransactionRepo = (
+  prisma: PrismaTx,
+  transactionId: string
+) => {
+  return prisma.transaction.update({
+    where: { id: transactionId },
+    data: { deletedAt: null },
   });
 };
 
@@ -142,7 +154,6 @@ export const findAccountTransactionsCursor = (
     where: {
       accountId,
       userId,
-      deletedAt: null,
 
       // business filters
       ...(filters?.type && { type: filters.type }),

@@ -71,6 +71,7 @@ export async function listUnifiedFeed(
       categoryId: t.categoryId ?? undefined,
       description: t.description ?? undefined,
       createdAt: t.createdAt,
+      deletedAt: t.deletedAt ?? undefined,
     });
   }
 
@@ -89,6 +90,7 @@ export async function listUnifiedFeed(
       amount: expense.amount.toNumber(),
       description: expense.description ?? undefined,
       createdAt: expense.createdAt,
+      deletedAt: expense.deletedAt ?? undefined,
     });
   });
 

@@ -22,6 +22,7 @@ export const AuditEvents = {
 
     TRANSACTION_CREATED: "transaction.created",
     TRANSACTION_DELETED: "transaction.deleted",
+    TRANSACTION_RESTORED: "transaction.restored",
 
     ACCOUNT_CREATED: "account.created",
     ACCOUNT_DELETED: "account.deleted",

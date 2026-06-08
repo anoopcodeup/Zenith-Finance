@@ -6,6 +6,7 @@ export type CreateTransactionDomain = {
   description?: string;
   categoryId?: string;
   transferId?: string;
+  createdAt?: Date;
 };
 
 export type TransferDomain = {

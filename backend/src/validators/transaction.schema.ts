@@ -6,6 +6,7 @@ export const createTransactionSchema = z.object({
   type: z.enum(["INCOME", "EXPENSE"]),
   categoryId: z.string().uuid().optional(),
   description: z.string().max(255).optional(),
+  createdAt: z.string().optional().transform((str) => str ? new Date(str) : undefined),
 });
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 

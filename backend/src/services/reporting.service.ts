@@ -10,12 +10,14 @@ import {
   monthlySummaryKey,
   categoryBreakdownKey,
 } from "../utils/cacheKeys";
+import { prisma } from "../config/prisma";
 
 const CACHE_TTL = 60 * 10; // 10 minutes
 
 export interface CategoryBreakdown {
   categoryId: string;
   total: Decimal;
+  categoryName: string;
 }
 
 export interface CategoryBreakdownResponse {
@@ -103,15 +105,25 @@ export const getCategoryBreakdownService = async (
     start,
     end
   );
-  //rows = [{ categoryId: 'cat_123', _sum: { amount: 150 } }, { categoryId: 'cat_456', _sum: { amount: 1200 } }]
-  //categories = [{ categoryId: 'cat_123', total: 150 }, { categoryId: 'cat_456', total: 1200 }]
 
+  const categoryIds = rows.map((r) => r.categoryId).filter(Boolean) as string[];
+  const categories = await prisma.category.findMany({
+    where: {
+      id: { in: categoryIds },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+  const categoryNameMap = new Map(categories.map((c) => [c.id, c.name]));
 
   const result = {
     month,
     type,
     categories: rows.map(r => ({
       categoryId: r.categoryId!,
+      categoryName: categoryNameMap.get(r.categoryId!) ?? "Uncategorized",
       total: r._sum.amount ?? new Decimal(0),
     })),
   };

@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import { prisma } from "./config/prisma";
 import authRoutes from "./routes/auth.route";
@@ -11,8 +12,19 @@ import budgetRoutes from "./routes/budget.route";
 import recurringRoutes from "./routes/recurringTransaction.route";
 import { authRateLimit } from "./middlewares/rateLimit.middleware";
 import { errorHandler } from "./middlewares/error.middleware";
+import { authenticate } from "./middlewares/auth.middleware";
 
 const app = express();
+
+// CORS — allow Next.js frontend with credentials
+app.use(
+  cors({
+    origin: ["http://localhost:3001", "http://127.0.0.1:3001"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -26,6 +38,23 @@ app.use("/feed", authRateLimit, feedRoutes);
 app.use("/reports", authRateLimit, reportingRoutes);
 app.use("/budgets", budgetRoutes);
 app.use("/recurring-transactions", recurringRoutes);
+
+app.get("/categories", authenticate, authRateLimit, async (req, res, next) => {
+  try {
+    const categories = await prisma.category.findMany({
+      where: {
+        OR: [
+          { userId: null },
+          { userId: req.user.id },
+        ],
+      },
+      orderBy: { name: "asc" },
+    });
+    res.json(categories);
+  } catch (err) {
+    next(err);
+  }
+});
 
 
 

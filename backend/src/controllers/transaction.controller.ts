@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import {
     createTransaction,
     listAccountTransactions, 
-    deleteTransaction, 
+    deleteTransaction,
+    restoreTransaction, 
     getAccountBalance,
 } from "../services/transaction.service";
 import { HttpError } from "../utils/httpError";
@@ -59,6 +60,21 @@ export const deleteTransactionHandler = async (
 
     await deleteTransaction(userId, transactionId);
     res.status(204).send();
+};
+
+export const restoreTransactionHandler = async (
+    req: Request,
+    res: Response
+) => {
+    const userId = (req as any).user.id;
+    const { transactionId } = req.params;
+
+    if (typeof transactionId !== "string") {
+        throw new HttpError("Invalid transactionId", 400);
+    }
+
+    await restoreTransaction(userId, transactionId);
+    res.status(200).json({ message: "Transaction restored successfully" });
 };
 
 export const getAccountBalanceHandler = async (

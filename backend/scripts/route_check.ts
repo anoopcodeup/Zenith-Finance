@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Node native fetch will be used
 
 const baseUrl = 'http://localhost:3000';
 
