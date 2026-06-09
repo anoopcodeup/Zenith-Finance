@@ -82,7 +82,34 @@ cd ../frontend
 npm install
 npm run dev
 ```
-The client starts on `http://localhost:3001` (or next available port).
+The client starts on `http://localhost:3000`.
+
+---
+
+## 🐳 Dockerized Local Setup
+
+You can run the entire stack locally in one command using Docker Compose:
+
+```bash
+docker compose up --build
+```
+This automatically spins up and links:
+*   **Frontend client**: `http://localhost:3000` (mapped externally)
+*   **Backend server**: `http://localhost:5000` (mapped externally)
+*   **Local PostgreSQL Database**: Port `5432` (internal/external)
+*   **Local Redis**: Port `6379` (internal/external)
+
+---
+
+## ☁️ AWS Production Deployment
+
+The project is configured for secure, scalable cloud deployment. The live environment architecture consists of:
+
+*   **Compute (AWS EC2)**: Hosts the containerized frontend and backend microservices using Docker.
+*   **Database (AWS RDS)**: A managed PostgreSQL instance isolated from the public internet, accessible only from the EC2 instance via a secure VPC Security Group bridge.
+*   **Cache & Queue (Upstash Redis)**: A secure, serverless cloud Redis instance for caching API queries and backing BullMQ background queues.
+*   **Reverse Proxy (Nginx)**: Runs on the EC2 host, forwarding external HTTP (port 80) web traffic directly to the Next.js standalone Docker container on port `3000`.
+*   **Runtime API Proxying**: Next.js uses a custom catch-all Route Handler (`app/api/[...path]/route.ts`) that filters hop-by-hop headers and proxies requests to `BACKEND_API_URL` dynamically. This avoids Next.js build-time URL serialization bugs.
 
 ---
 

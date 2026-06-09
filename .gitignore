@@ -8,7 +8,10 @@ backend/dist/
 backend/src/generated/prisma/
 
 # Environment configurations (Secrets)
-backend/.env
+**/.env
+**/.env.local
+**/.env.*
+*.pem
 
 # Local logs/outputs
 backend/feed-test-output.txt

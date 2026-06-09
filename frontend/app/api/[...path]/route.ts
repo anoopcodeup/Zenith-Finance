@@ -35,8 +35,9 @@ async function handleProxy(request: NextRequest) {
   const targetUrl = `${backendUrl}${targetPath}${url.search}`;
 
   const headers = new Headers();
+  const hopByHop = ["host", "connection", "keep-alive", "upgrade", "transfer-encoding", "te"];
   request.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== "host") {
+    if (!hopByHop.includes(key.toLowerCase())) {
       headers.set(key, value);
     }
   });
