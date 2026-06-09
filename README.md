@@ -49,7 +49,7 @@ Zenith-Finance/
 Create a `.env` file in the `backend/` directory:
 ```env
 DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<db_name>?schema=public"
-PORT=3000
+PORT=5000
 REDIS_URL="redis://<user>:<password>@<host>:<port>"
 JWT_ACCESS_SECRET="your-access-secret"
 JWT_REFRESH_SECRET="your-refresh-secret"
@@ -59,7 +59,7 @@ INTERNAL_API_TOKEN="your-internal-api-secret"
 ### Frontend Configuration
 Create a `.env.local` file in the `frontend/` directory:
 ```env
-NEXT_PUBLIC_API_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:5000"
 ```
 
 ---
@@ -74,7 +74,7 @@ npx prisma migrate dev
 npx prisma db seed
 npm run dev
 ```
-The server starts on `http://localhost:3000`.
+The server starts on `http://localhost:5000`.
 
 ### 2. Set Up and Run the Frontend
 ```bash

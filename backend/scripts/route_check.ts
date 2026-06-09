@@ -1,6 +1,6 @@
 // Node native fetch will be used
 
-const baseUrl = 'http://localhost:3000';
+const baseUrl = 'http://localhost:5000';
 
 const endpoints = [
   '/auth',

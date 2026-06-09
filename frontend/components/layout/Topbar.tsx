@@ -1,8 +1,9 @@
 "use client";
 
-import { Menu, Bell, Plus, ArrowLeftRight } from "lucide-react";
+import { Menu, Bell, Plus, ArrowLeftRight, Sun, Moon } from "lucide-react";
 import { useUIStore } from "@/store/ui.store";
 import { usePathname } from "next/navigation";
+import { useTheme } from "@/app/ThemeProvider";
 
 const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -17,6 +18,7 @@ const PAGE_TITLES: Record<string, string> = {
 export default function Topbar() {
   const { toggleSidebar, setQuickAddOpen, setTransferOpen } = useUIStore();
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
 
   const title =
     Object.entries(PAGE_TITLES).find(([key]) => pathname === key || pathname.startsWith(key + "/"))?.[1] ??
@@ -49,6 +51,14 @@ export default function Topbar() {
         >
           <ArrowLeftRight className="w-4 h-4 text-indigo-400" />
           Transfer Funds
+        </button>
+
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {theme === "dark" ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-indigo-400" />}
         </button>
 
         <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors relative">

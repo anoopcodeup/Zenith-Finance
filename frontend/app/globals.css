@@ -3,13 +3,13 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  --color-bg-base: #08080f;
-  --color-bg-surface: #111118;
-  --color-bg-elevated: #18181f;
-  --color-bg-card: #1c1c26;
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-card: var(--bg-card);
 
-  --color-border: #2a2a38;
-  --color-border-bright: #3a3a50;
+  --color-border: var(--border);
+  --color-border-bright: var(--border-bright);
 
   --color-primary: #6366f1;
   --color-primary-hover: #5254cc;
@@ -22,9 +22,115 @@
   --color-transfer: #a78bfa;
   --color-transfer-bg: rgba(167, 139, 250, 0.12);
 
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #4f5a6e;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+}
+
+:root {
+  /* Default Theme: Premium Dark Mode */
+  --bg-base: #08080f;
+  --bg-surface: #111118;
+  --bg-elevated: #18181f;
+  --bg-card: #1c1c26;
+
+  --border: #2a2a38;
+  --border-bright: #3a3a50;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #4f5a6e;
+}
+
+html.light {
+  /* Elegant Light Mode */
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --bg-card: #ffffff;
+
+  --border: #e2e8f0;
+  --border-bright: #cbd5e1;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+}
+
+/* Light mode theme overrides for utility classes with hardcoded hex colors */
+html.light .bg-\[\#08080f\] {
+  background-color: var(--bg-base) !important;
+}
+html.light .bg-\[\#111118\] {
+  background-color: var(--bg-surface) !important;
+}
+html.light .bg-\[\#18181f\] {
+  background-color: var(--bg-elevated) !important;
+}
+html.light .bg-\[\#1c1c26\] {
+  background-color: var(--bg-card) !important;
+}
+html.light .bg-\[\#232330\] {
+  background-color: var(--bg-elevated) !important;
+}
+html.light .bg-\[\#222230\] {
+  background-color: var(--bg-elevated) !important;
+}
+html.light .bg-\[\#1e1e2e\] {
+  background-color: var(--bg-elevated) !important;
+}
+html.light .bg-\[\#08080f\]\/80 {
+  background-color: rgba(248, 250, 252, 0.8) !important;
+}
+html.light .bg-\[\#111118\]\/80 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+html.light .border-\[\#2a2a38\] {
+  border-color: var(--border) !important;
+}
+html.light .border-\[\#3a3a50\] {
+  border-color: var(--border-bright) !important;
+}
+
+/* Scrollbar styling in light mode */
+html.light ::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-bright);
+}
+
+/* Glass panel style in light mode */
+html.light .glass {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Light mode text colors */
+html.light .text-white:not(button, button *, .gradient-brand, .gradient-brand *, .income-badge, .expense-badge, .transfer-badge) {
+  color: var(--text-primary) !important;
+}
+html.light .text-slate-100:not(button, button *, .gradient-brand, .gradient-brand *, .income-badge, .expense-badge, .transfer-badge) {
+  color: var(--text-primary) !important;
+}
+html.light .text-slate-200:not(button, button *, .gradient-brand, .gradient-brand *, .income-badge, .expense-badge, .transfer-badge) {
+  color: var(--text-primary) !important;
+}
+html.light .text-slate-300:not(button, button *, .gradient-brand, .gradient-brand *, .income-badge, .expense-badge, .transfer-badge) {
+  color: var(--text-secondary) !important;
+}
+html.light .text-slate-400:not(button, button *, .gradient-brand, .gradient-brand *, .income-badge, .expense-badge, .transfer-badge) {
+  color: var(--text-secondary) !important;
+}
+html.light .text-slate-500:not(button, button *, .gradient-brand, .gradient-brand *, .income-badge, .expense-badge, .transfer-badge) {
+  color: var(--text-muted) !important;
+}
+
+html.light ::placeholder {
+  color: var(--text-muted) !important;
+}
+html.light .placeholder-slate-500::placeholder {
+  color: var(--text-muted) !important;
 }
 
 @layer base {
@@ -38,8 +144,8 @@
   }
 
   body {
-    background-color: #08080f;
-    color: #f1f5f9;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

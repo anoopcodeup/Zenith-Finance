@@ -29,3 +29,7 @@ backend/scripts/*.d.ts
 
 # Documentation / Notes
 POSTMAN_VERIFICATION_PLAN.md
+
+# Logs
+*.log
+**/*.log

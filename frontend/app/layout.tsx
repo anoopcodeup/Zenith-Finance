@@ -26,8 +26,22 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('theme') || 'dark';
+                if (theme === 'light') {
+                  document.documentElement.classList.add('light');
+                } else {
+                  document.documentElement.classList.remove('light');
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
       </head>
-      <body className="bg-[#08080f] text-slate-100 antialiased">
+      <body className="bg-bg-base text-text-primary antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

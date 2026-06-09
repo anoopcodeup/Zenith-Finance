@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as fs from 'fs';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://localhost:5000';
 const USER_EMAIL = 'test@example.com';
 const USER_PASSWORD = 'password123';
 const LOG_FILE = 'test_auth.log';
