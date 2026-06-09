@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+.env*
+.vercel
+*.log
+.git
+.vscode
+.idea
+.DS_Store

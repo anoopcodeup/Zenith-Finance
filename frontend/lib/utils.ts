@@ -48,10 +48,18 @@ export function getMonthOptions(count = 12): { value: string; label: string }[] 
   return options;
 }
 
-export function getApiError(error: unknown): string {
-  if (error && typeof error === "object" && "response" in error) {
-    const axiosError = error as { response?: { data?: { message?: string } } };
-    return axiosError.response?.data?.message ?? "An error occurred";
+export function getApiError(error: any): string {
+  if (error && typeof error === "object") {
+    if (error.response) {
+      const status = error.response.status;
+      const dataMessage = error.response.data?.message || error.response.data?.error || error.response.data?.details;
+      if (dataMessage) return dataMessage;
+      return `API Error ${status}: ${error.response.statusText || "Unknown Error"}`;
+    }
+    if (error.request) {
+      return "Network Error: No response received from the server. Verify the backend container is running and that BACKEND_API_URL is configured correctly.";
+    }
+    if (error.message) return error.message;
   }
   if (error instanceof Error) return error.message;
   return "An unexpected error occurred";
