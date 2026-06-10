@@ -106,11 +106,10 @@ This automatically spins up and links:
 ```mermaid
 graph TD
     %% Define styles and classes
-    classDef client fill:#eef2f7,stroke:#4a5568,stroke-width:2px;
-    classDef boundary fill:#f7fafc,stroke:#cbd5e0,stroke-width:2px,stroke-dasharray: 5 5;
-    classDef server fill:#ebf8ff,stroke:#3182ce,stroke-width:2px;
-    classDef container fill:#e6fffa,stroke:#319795,stroke-width:2px;
-    classDef db fill:#fefcbf,stroke:#d69e2e,stroke-width:2px;
+    classDef client fill:#2b6cb0,stroke:#1a365d,stroke-width:2px,color:#fff;
+    classDef server fill:#4a5568,stroke:#2d3748,stroke-width:2px,color:#fff;
+    classDef container fill:#00a389,stroke:#005e4f,stroke-width:2px,color:#fff;
+    classDef db fill:#dd6b20,stroke:#7b341e,stroke-width:2px,color:#fff;
 
     %% Elements
     Client[User Browser]:::client
@@ -146,11 +145,11 @@ graph TD
     Backend -- Redis Client (SSL) --> Redis
 
     %% Appending styles
-    style AWS_Cloud fill:#f7fafc,stroke:#a0aec0,stroke-width:2px
-    style VPC fill:#edf2f7,stroke:#718096,stroke-width:2px
-    style SG_EC2 fill:#fff,stroke:#e2e8f0,stroke-width:1px
-    style SG_RDS fill:#fff,stroke:#e2e8f0,stroke-width:1px
-    style Docker_Compose fill:#f0fff4,stroke:#38a169,stroke-width:2px
+    style AWS_Cloud stroke:#718096,stroke-width:2px,stroke-dasharray: 5 5
+    style VPC stroke:#718096,stroke-width:2px
+    style SG_EC2 stroke:#cbd5e0,stroke-width:1px
+    style SG_RDS stroke:#cbd5e0,stroke-width:1px
+    style Docker_Compose stroke:#38a169,stroke-width:2px,stroke-dasharray: 3 3
 ```
 
 The project is configured for secure, scalable cloud deployment. The live environment architecture consists of:
