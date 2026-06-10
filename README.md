@@ -103,6 +103,56 @@ This automatically spins up and links:
 
 ## ☁️ AWS Production Deployment
 
+```mermaid
+graph TD
+    %% Define styles and classes
+    classDef client fill:#eef2f7,stroke:#4a5568,stroke-width:2px;
+    classDef boundary fill:#f7fafc,stroke:#cbd5e0,stroke-width:2px,stroke-dasharray: 5 5;
+    classDef server fill:#ebf8ff,stroke:#3182ce,stroke-width:2px;
+    classDef container fill:#e6fffa,stroke:#319795,stroke-width:2px;
+    classDef db fill:#fefcbf,stroke:#d69e2e,stroke-width:2px;
+
+    %% Elements
+    Client[User Browser]:::client
+
+    subgraph AWS_Cloud ["AWS Cloud (us-east-1)"]
+        subgraph VPC ["Virtual Private Cloud (VPC)"]
+            
+            subgraph SG_EC2 ["EC2 Security Group (Port 80/443 Open)"]
+                subgraph EC2_Host ["EC2 Instance (Ubuntu 24.04 / 20GB EBS)"]
+                    Nginx[Nginx Reverse Proxy]:::server
+                    
+                    subgraph Docker_Compose ["Docker Compose Net (zenith-network)"]
+                        Frontend["Frontend Container<br/>Next.js Standalone (Port 3000)"]:::container
+                        Backend["Backend Container<br/>Node.js/Express (Port 5000)"]:::container
+                    end
+                end
+            end
+
+            subgraph SG_RDS ["RDS Security Group (Port 5432 Open to EC2)"]
+                RDS[(AWS RDS<br/>PostgreSQL Instance)]:::db
+            end
+
+        end
+        
+        Redis[(Upstash Cloud Redis<br/>Caching & Queues)]:::db
+    end
+
+    %% Routing
+    Client -- HTTP/HTTPS --> Nginx
+    Nginx -- Proxy Pass (Port 3000) --> Frontend
+    Frontend -- Internal API Proxy Fetch (route.ts) --> Backend
+    Backend -- Prisma ORM (Port 5432) --> RDS
+    Backend -- Redis Client (SSL) --> Redis
+
+    %% Appending styles
+    style AWS_Cloud fill:#f7fafc,stroke:#a0aec0,stroke-width:2px
+    style VPC fill:#edf2f7,stroke:#718096,stroke-width:2px
+    style SG_EC2 fill:#fff,stroke:#e2e8f0,stroke-width:1px
+    style SG_RDS fill:#fff,stroke:#e2e8f0,stroke-width:1px
+    style Docker_Compose fill:#f0fff4,stroke:#38a169,stroke-width:2px
+```
+
 The project is configured for secure, scalable cloud deployment. The live environment architecture consists of:
 
 *   **Compute (AWS EC2)**: Hosts the containerized frontend and backend microservices using Docker.
